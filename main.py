@@ -3,17 +3,17 @@ import json
 import requests
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
 
-# === CONFIG ===
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY") or "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"
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY") or "sk-or-your-backup-key"
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat"
-
 MEMORY_FILE = "memory.json"
 
-# === Load or Init Memory ===
 def load_memory():
     if os.path.exists(MEMORY_FILE):
         with open(MEMORY_FILE, "r") as f:
@@ -26,7 +26,6 @@ def save_memory(memory):
 
 memory = load_memory()
 
-# === Extract New Facts ===
 def extract_new_facts(chat_history, known_facts):
     summary_prompt = (
         "You are summarising the following conversation between Master Reyansh and his British butler assistant Anya. "
@@ -58,7 +57,6 @@ def extract_new_facts(chat_history, known_facts):
     new_facts = [fact.strip("-• ") for fact in raw_facts if fact.strip() and fact not in known_facts]
     return new_facts
 
-# === Ask OpenRouter ===
 def ask_openrouter(user_message, facts, chat_history):
     messages = [
         {
@@ -77,7 +75,6 @@ Here are the memory facts you currently know:
         }
     ]
 
-    # Add recent chat history
     for entry in chat_history[-10:]:
         messages.append({"role": "user", "content": entry["user"]})
         messages.append({"role": "assistant", "content": entry["bot"]})
@@ -98,7 +95,6 @@ Here are the memory facts you currently know:
 
     return response.json()["choices"][0]["message"]["content"]
 
-# === Main Chat Route ===
 @app.route("/chat", methods=["POST"])
 def chat():
     data = request.get_json()
@@ -107,7 +103,6 @@ def chat():
     reply = ask_openrouter(user_message, memory["facts"], memory["chat_history"])
     memory["chat_history"].append({"user": user_message, "bot": reply})
 
-    # Summarize into new facts
     new_facts = extract_new_facts(memory["chat_history"], memory["facts"])
     if new_facts:
         memory["facts"].extend(new_facts)
@@ -115,10 +110,9 @@ def chat():
     save_memory(memory)
     return jsonify({"reply": reply})
 
-# === Health Check ===
 @app.route("/")
 def home():
     return "Anya is online and at your service, Master Reyansh. 🫡"
 
 if __name__ == "__main__":
-    app.run(debug=True, port=3333)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
