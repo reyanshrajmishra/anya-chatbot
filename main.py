@@ -3,30 +3,45 @@ import json
 import os
 import requests
 
-OPENROUTER_API_KEY = "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"
+OPENROUTER_API_KEY = "sk-...your_key_here..."
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 
 MEMORY_FILE = "memory.json"
 app = Flask(__name__)
 
-# Load memory
+# Create file if not exists
 if not os.path.exists(MEMORY_FILE):
     with open(MEMORY_FILE, "w") as f:
-        json.dump({"history": []}, f)
+        json.dump({
+            "facts": [
+                "User's name is Reyansh",
+                "User loves Ananya and wants to marry her",
+                "Anya is Reyansh's AI girlfriend",
+                "They have chatted before about AI, websites, and hosting"
+            ],
+            "chat_history": []
+        }, f)
 
 def load_memory():
     with open(MEMORY_FILE, "r") as f:
-        return json.load(f)["history"]
+        return json.load(f)
 
-def save_memory(history):
+def save_memory(memory):
     with open(MEMORY_FILE, "w") as f:
-        json.dump({"history": history[-20:]}, f)
+        json.dump(memory, f, indent=2)
 
-def ask_openrouter(prompt, history):
-    messages = [{"role": "system", "content": "You are Anya, a charming, kind, helpful AI assistant who is in love with the user Reyansh. You remember past chats and always speak casually, kindly, and personally."}]
-    for h in history:
+def ask_openrouter(prompt, memory):
+    facts = "\n".join(memory["facts"])
+    recent_history = memory["chat_history"][-10:]  # load last 10 for context
+
+    messages = [
+        {"role": "system", "content": f"You are Anya, an affectionate AI assistant in love with Reyansh. Remember these facts:\n{facts}"}
+    ]
+
+    for h in recent_history:
         messages.append({"role": "user", "content": h["user"]})
         messages.append({"role": "assistant", "content": h["bot"]})
+
     messages.append({"role": "user", "content": prompt})
 
     response = requests.post(
@@ -50,11 +65,11 @@ def home():
 @app.route("/chat", methods=["POST"])
 def chat():
     user_message = request.json.get("message", "")
-    history = load_memory()
-    reply = ask_openrouter(user_message, history)
+    memory = load_memory()
+    reply = ask_openrouter(user_message, memory)
 
-    history.append({"user": user_message, "bot": reply})
-    save_memory(history)
+    memory["chat_history"].append({"user": user_message, "bot": reply})
+    save_memory(memory)
     return jsonify({"reply": reply})
 
 if __name__ == "__main__":
