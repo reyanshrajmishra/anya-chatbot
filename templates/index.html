@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Anya AI Chat</title>
+  <style>
+    body { font-family: sans-serif; margin: 50px; background: #fdfdfd; }
+    #chat { width: 100%; max-width: 600px; margin: auto; }
+    .msg { margin: 10px 0; }
+    input, button { padding: 10px; font-size: 16px; }
+  </style>
+</head>
+<body>
+  <div id="chat">
+    <h2>Chat with Anya</h2>
+    <div id="messages"></div>
+    <input id="input" placeholder="Type a message..." />
+    <button onclick="send()">Send</button>
+  </div>
+
+  <script>
+    async function send() {
+      const msg = document.getElementById('input').value;
+      document.getElementById('messages').innerHTML += `<div class="msg"><b>You:</b> ${msg}</div>`;
+      const res = await fetch('/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: msg })
+      });
+      const data = await res.json();
+      document.getElementById('messages').innerHTML += `<div class="msg"><b>Anya:</b> ${data.reply}</div>`;
+      document.getElementById('input').value = '';
+    }
+  </script>
+</body>
+</html>
