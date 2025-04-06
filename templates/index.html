@@ -1,27 +1,68 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Chat with Anya</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SHIELD | Anya AI</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #0f0f0f;
+      color: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background-image: radial-gradient(circle at 20% 20%, #1c1c1c, #000);
+    }
+
+    .logo {
+      font-size: 3em;
+      font-weight: bold;
+      letter-spacing: 3px;
+      color: #00ffaa;
+      margin-bottom: 0.2em;
+    }
+
+    .subtitle {
+      font-size: 1.2em;
+      color: #ccc;
+      margin-bottom: 2em;
+      text-align: center;
+    }
+
+    .status-box {
+      padding: 1em 2em;
+      border: 1px solid #00ffaa;
+      border-radius: 10px;
+      background-color: #1b1b1b;
+      box-shadow: 0 0 20px rgba(0,255,170,0.2);
+    }
+
+    .status-box p {
+      margin: 0;
+      font-size: 1.1em;
+      color: #00ffaa;
+    }
+
+    .footer {
+      position: absolute;
+      bottom: 10px;
+      color: #555;
+      font-size: 0.9em;
+    }
+  </style>
 </head>
 <body>
-    <h2>Chat with Anya </h2>
-    <div id="chat" style="white-space: pre-wrap; margin-top: 20px;"></div>
-    <input id="msg" placeholder="Type your message..." style="width: 100%;" />
-    <button onclick="send()">Send</button>
+  <div class="logo">SHIELD</div>
+  <div class="subtitle">Private Intelligence & Defense | Powered by Anya</div>
 
-    <script>
-        async function send() {
-            let msg = document.getElementById("msg").value;
-            document.getElementById("chat").innerHTML += "You: " + msg + "\n";
-            document.getElementById("msg").value = "";
-            let res = await fetch("/chat", {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({message: msg})
-            });
-            let data = await res.json();
-            document.getElementById("chat").innerHTML += "Anya: " + data.reply + "\n\n";
-        }
-    </script>
+  <div class="status-box">
+    <p>🤖 Anya is operational. Awaiting your command, Master Reyansh.</p>
+  </div>
+
+  <div class="footer">© 2025 SHIELD Intelligence Division</div>
 </body>
 </html>
