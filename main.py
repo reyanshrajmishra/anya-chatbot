@@ -3,7 +3,7 @@ import json
 import os
 import requests
 
-OPENROUTER_API_KEY = "sk-...your_key_here..."
+OPENROUTER_API_KEY = "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"
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 
 MEMORY_FILE = "memory.json"
