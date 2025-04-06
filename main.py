@@ -8,7 +8,7 @@ app = Flask(__name__, template_folder="templates")
 CORS(app)
 
 # 💀 Hardcoded API key (use your own)
-OPENROUTER_API_KEY = "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"
+OPENROUTER_API_KEY = "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"
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat"
 MEMORY_FILE = "memory.json"
 
