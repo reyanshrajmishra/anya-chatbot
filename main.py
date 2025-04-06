@@ -1,16 +1,16 @@
 import os
 import json
 import requests
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 from dotenv import load_dotenv
 
 load_dotenv()
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder="templates")
 CORS(app)
 
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY") or "sk-or-your-backup-key"
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY") or "sk-or-your-key"
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat"
 MEMORY_FILE = "memory.json"
 
@@ -95,6 +95,10 @@ Here are the memory facts you currently know:
 
     return response.json()["choices"][0]["message"]["content"]
 
+@app.route("/")
+def home():
+    return render_template("index.html")
+
 @app.route("/chat", methods=["POST"])
 def chat():
     data = request.get_json()
@@ -109,10 +113,6 @@ def chat():
 
     save_memory(memory)
     return jsonify({"reply": reply})
-
-@app.route("/")
-def home():
-    return "Anya is online and at your service, Master Reyansh. 🫡"
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
