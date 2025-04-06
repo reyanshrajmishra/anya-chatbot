@@ -8,7 +8,7 @@ app = Flask(__name__, template_folder="templates")
 CORS(app)
 
 # 💀 Hardcoded API key (use your own)
-OPENROUTER_API_KEY = "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"
+OPENROUTER_API_KEY = "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"
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat"
 MEMORY_FILE = "memory.json"
 
@@ -41,9 +41,11 @@ def extract_new_facts(chat_history, known_facts):
 
     response = requests.post(
         OPENROUTER_URL,
-        headers={
-            "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-            "Content-Type": "application/json"
+headers = {
+    "Authorization": "Bearer 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",
+    ...
+}
+
         },
         json={
             "model": "openrouter/mistralai/mixtral-8x7b",
