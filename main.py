@@ -1,50 +1,47 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, request, render_template, jsonify
 import json
 import os
 import requests
-from bs4 import BeautifulSoup
 
-app = Flask(__name__)
+OPENROUTER_API_KEY = "sk-...your_key_here..."
+OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+
 MEMORY_FILE = "memory.json"
+app = Flask(__name__)
 
-# Ensure memory exists
+# Load memory
 if not os.path.exists(MEMORY_FILE):
     with open(MEMORY_FILE, "w") as f:
-        json.dump({"chat_history": []}, f)
+        json.dump({"history": []}, f)
 
 def load_memory():
     with open(MEMORY_FILE, "r") as f:
-        return json.load(f)
+        return json.load(f)["history"]
 
-def save_memory(data):
+def save_memory(history):
     with open(MEMORY_FILE, "w") as f:
-        json.dump(data, f)
+        json.dump({"history": history[-20:]}, f)
 
-def search_google(query):
-    headers = {"User-Agent": "Mozilla/5.0"}
-    response = requests.get(f"https://www.google.com/search?q={query}", headers=headers)
-    soup = BeautifulSoup(response.text, "html.parser")
-    results = soup.select("div.tF2Cxc")
-    links = []
-    for r in results[:3]:
-        title = r.select_one("h3").text if r.select_one("h3") else "No title"
-        url = r.select_one("a")["href"]
-        links.append(f"{title}:\n{url}")
-    return "\n\n".join(links) if links else "No results found."
+def ask_openrouter(prompt, history):
+    messages = [{"role": "system", "content": "You are Anya, a charming, kind, helpful AI assistant who is in love with the user Reyansh. You remember past chats and always speak casually, kindly, and personally."}]
+    for h in history:
+        messages.append({"role": "user", "content": h["user"]})
+        messages.append({"role": "assistant", "content": h["bot"]})
+    messages.append({"role": "user", "content": prompt})
 
-def basic_ai_reply(message, memory):
-    if "how are you" in message.lower():
-        return "I'm doing great, thanks for asking! 😊"
-    if "your name" in message.lower():
-        return "My name is Anya, your personal AI assistant 💖"
-    if "love" in message.lower():
-        return "Aww, love is beautiful. Tell me more about how you feel. 💌"
-    if "hi" in message.lower() or "hello" in message.lower():
-        return "Hey there! 😊 What’s up?"
-    if "?" in message:
-        return "That's an interesting question. I’ll remember it!"
-    # Default
-    return f"I remember you said: \"{memory[-1]}\""
+    response = requests.post(
+        OPENROUTER_URL,
+        headers={
+            "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+            "Content-Type": "application/json"
+        },
+        json={
+            "model": "openrouter/mistralai/mixtral-8x7b",
+            "messages": messages
+        }
+    )
+    reply = response.json()["choices"][0]["message"]["content"]
+    return reply
 
 @app.route("/")
 def home():
@@ -52,21 +49,12 @@ def home():
 
 @app.route("/chat", methods=["POST"])
 def chat():
-    user_input = request.json.get("message", "").strip()
-    data = load_memory()
-    history = data.get("chat_history", [])
+    user_message = request.json.get("message", "")
+    history = load_memory()
+    reply = ask_openrouter(user_message, history)
 
-    if user_input.lower().startswith("search:"):
-        query = user_input[7:].strip()
-        reply = search_google(query)
-    else:
-        reply = basic_ai_reply(user_input, history)
-
-    # Save memory
-    history.append(user_input)
-    data["chat_history"] = history[-50:]  # Keep last 50 messages only
-    save_memory(data)
-
+    history.append({"user": user_message, "bot": reply})
+    save_memory(history)
     return jsonify({"reply": reply})
 
 if __name__ == "__main__":
